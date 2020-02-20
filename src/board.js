@@ -31,6 +31,7 @@ Board.prototype.getTcpData = (data) => {
 Board.prototype.formatLines = () => {
     return new Promise(async (resolve, reject) => {
         try {
+            if (this.data == null || typeof this.data === 'undefined') { reject(new Error('Data from server is empty ?')); return }
             let arr = this.data.split(/\r?\n/);
             arr = arr.filter((a) => {return a!=='' });
             arr.shift();arr.shift();

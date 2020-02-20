@@ -16,6 +16,8 @@ setTimeout(() => {
     client.destroy();
 }, 2000);
 
+client.on('error', function(err) { throw new Error(err) });
+
 client.on('close', function() {
     console.log('Connection closed');
     main();
