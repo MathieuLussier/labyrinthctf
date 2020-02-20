@@ -1,12 +1,13 @@
 'use strict';
 const fs = require('fs');
+const path = require('path');
 
 const Board = function() {
     this.startPointChar = 'S';
     this.endPointChar = 'E';
     this.startPoint = { x: 0, y: 0 };
     this.endPoint = { x: 0, y: 0 };
-    this.corridor = ',';
+    this.corridor = ' ';
     this.wall = '+';
     this.data;
     this.lines = [];
@@ -36,7 +37,7 @@ Board.prototype.formatLines = function() {
 Board.prototype.loadJsonBoard = function() {
     return new Promise((resolve, reject) => {
         try {
-            const file = JSON.parse(fs.readFileSync('labyrinth.json'));
+            const file = JSON.parse(fs.readFileSync(path.join(__dirname, '/labyrinth.json')));
             this.lines = file;
             resolve();
         } catch (e) {

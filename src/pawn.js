@@ -3,20 +3,21 @@ const board = require('./board');
 const Direction = require('./direction');
 
 const Pawn = function() {
-    this.pawn = 'P';
+    this.pawnChar = 'P';
     this.pos = { x: 0, y: 0 };
     this.path = [];
     this.backtrack = [];
     this.direction = { x: 1, y: 0 };
+    this.isFinish = false;
 };
 
 Pawn.prototype.init = function() {
     return new Promise(async (resolve, reject) => {
         try {
             this.pos = board.startPoint;
-            console.log(this.pos);
             this.direction = Direction.RIGHT;
-            console.log(this.direction);
+            // await this.printPosDirection();
+            // await this.setPawnPosOnBoard();
             resolve();
         } catch (e) {
             throw new Error(e);
@@ -25,13 +26,149 @@ Pawn.prototype.init = function() {
 };
 
 Pawn.prototype.walk = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // console.log('Walking ...');
 
+            // scan for adjacent potential route for later
+            await this.scanCurrentPos();
+
+            // Check the colision on front of the pawn depend on the direction
+            const isColision = await this.checkColision();
+            // console.log(isColision);
+            if (isColision === false) {
+                await this.move();
+            } else {
+                this.pos = this.backtrack[this.backtrack.length - 1].pos;
+                this.direction = this.backtrack[this.backtrack.length - 1].direction;
+                this.backtrack.pop();
+                await this.move();
+            }
+
+            const win = await this.checkWin();
+            if (win) {
+                console.log('End point reach !');
+                console.log(await this.getPosPlusDir(this.pos, this.direction));
+                await this.pathToString();
+                console.log(this.path);
+                console.timeEnd('RunTime');
+                process.exit(0);
+            }
+
+            // console.dir(this.backtrack);
+            // board.printBoard();
+            // this.printPosDirection();
+            resolve();
+        } catch (e) {
+            throw new Error(e);
+        }
+    });
+};
+
+Pawn.prototype.move = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            this.pos = await this.getPosPlusDir(this.pos, this.direction);
+            await this.setPawnPosOnBoard();
+            this.path.push(await Direction.formatString(this.direction));
+            resolve();
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.checkColision = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let colisionPos = await this.getPosPlusDir(this.pos, this.direction);
+            if (board.labyrinth[colisionPos.y][colisionPos.x] === board.wall) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.checkWin = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let colisionPos = await this.getPosPlusDir(this.pos, this.direction);
+            if (board.labyrinth[colisionPos.y][colisionPos.x] === board.endPointChar) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        } catch (e) {
+            throw e;
+        }
+    });
 };
 
 Pawn.prototype.scanCurrentPos = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const left = await Direction.getLeftPos(this.pos, this.direction);
+            const right = await Direction.getRightPos(this.pos, this.direction);
+            // console.log('leftPos' + left.pos.x + left.pos.y);
+            // console.log('rightPos' + right.pos.x + right.pos.y);
+            if (board.labyrinth[left.pos.y][left.pos.x] === ' ') {
+                this.backtrack.push({pos: this.pos, direction: left.direction});
+            }
+            if (board.labyrinth[right.pos.y][right.pos.x] === ' ') {
+                this.backtrack.push({pos: this.pos, direction: right.direction});
+            }
+            resolve();
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.printPosDirection = function() {
     return new Promise((resolve, reject) => {
         try {
-            resolve(Direction.RIGHT);
+            console.log(`Position: x: ${this.pos.x} y: ${this.pos.y}`);
+            console.log(`Direction: ${Direction.formatString(this.direction)}`);
+            resolve();
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.getPosPlusDir = function(pos, dir) {
+    return new Promise((resolve, reject) => {
+        try {
+            let returnedResult = { x: 0, y: 0};
+            returnedResult.x = pos.x + dir.x;
+            returnedResult.y = pos.y + dir.y;
+            resolve(returnedResult);
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.setPawnPosOnBoard = function() {
+    return new Promise((resolve, reject) => {
+        try {
+            board.labyrinth[this.pos.y][this.pos.x] = this.pawnChar;
+            resolve();
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.pathToString = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            this.path = await this.path.join(',');
+            resolve();
         } catch (e) {
             throw e;
         }
