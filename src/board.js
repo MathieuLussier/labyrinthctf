@@ -1,5 +1,6 @@
-const fs = require('fs');
+'use strict';
 
+const fs = require('fs');
 const startPoint = 'S';
 const endPoint = 'E';
 const corridor = ',';
@@ -9,13 +10,13 @@ const wall = '+';
 const Board = function() {
     this.data;
     this.lines = [];
-    this.board = [];
+    this.labyrinth = [];
 };
 
 Board.prototype.loadJsonBoard = () => {
     return new Promise((resolve, reject) => {
        try {
-           const file = fs.readFileSync('board.json');
+           const file = fs.readFileSync('labyrinth.json');
            this.lines = JSON.parse(file);
            resolve();
        } catch (e) {
@@ -36,7 +37,7 @@ Board.prototype.formatLines = () => {
             arr = arr.filter((a) => {return a!=='' });
             arr.shift();arr.shift();
             this.lines = arr;
-            await fs.writeFileSync('board.json', JSON.stringify(arr), { encoding: 'utf-8' });
+            await fs.writeFileSync('labyrinth.json', JSON.stringify(arr), { encoding: 'utf-8' });
             resolve();
         } catch (e) {
             throw new Error(e);
@@ -52,7 +53,7 @@ Board.prototype.create2DBoard = () => {
                const arr = line.split(',');
                arr2D.push(arr);
            });
-           this.board = arr2D;
+           this.labyrinth = arr2D;
            resolve();
        } catch (e) {
            throw new Error(e);
@@ -63,7 +64,7 @@ Board.prototype.create2DBoard = () => {
 Board.prototype.printBoard = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.table(this.board);
+            console.table(this.labyrinth);
             resolve();
         } catch (e) {
             throw new Error(e);
@@ -74,10 +75,15 @@ Board.prototype.printBoard = () => {
 Board.prototype.getStartPoint = () => {
     return new Promise((resolve, reject) => {
         try {
-            for (let i = 0; i < this.board.length; i++) {
-
+            for (let i = 0; i < this.labyrinth.length; i++) {
+                for (let j = 0; j < this.labyrinth[i].length; j++) {
+                    if (this.labyrinth[i][j] === startPoint) {
+                        resolve({ x: j, y: i });
+                        break;
+                    }
+                }
             }
-            resolve({ x: 0, y: 0 });
+            reject('Cant found the start point !');
         } catch (e) {
             throw new Error(e);
         }

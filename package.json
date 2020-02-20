@@ -9,5 +9,8 @@
   },
   "keywords": [],
   "author": "Mathieu Lussier",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^8.2.0"
+  }
 }
