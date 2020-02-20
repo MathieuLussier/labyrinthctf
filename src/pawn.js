@@ -2,20 +2,21 @@
 const board = require('./board');
 const Direction = require('./direction');
 
-
 const Pawn = function() {
     this.pawn = 'P';
-    this.currentPosition = { x: 0, y: 0 };
+    this.pos = { x: 0, y: 0 };
     this.path = [];
     this.backtrack = [];
     this.direction = { x: 1, y: 0 };
 };
 
-Pawn.prototype.init = () => {
+Pawn.prototype.init = function() {
     return new Promise(async (resolve, reject) => {
         try {
-            this.currentPosition = await board.getStartPoint();
-            console.log(this.currentPosition);
+            this.pos = board.startPoint;
+            console.log(this.pos);
+            this.direction = await this.scanStartDirection();
+            console.log(this.direction);
             resolve();
         } catch (e) {
             throw new Error(e);
@@ -23,7 +24,7 @@ Pawn.prototype.init = () => {
     });
 };
 
-Pawn.prototype.scanStartDirection = () => {
+Pawn.prototype.scanStartDirection = function() {
     return new Promise((resolve, reject) => {
         try {
             resolve(Direction.RIGHT);
@@ -33,8 +34,6 @@ Pawn.prototype.scanStartDirection = () => {
     });
 };
 
-const singleton = new Pawn();
+const instance = new Pawn();
 
-Object.freeze(singleton);
-
-module.exports = singleton;
+module.exports = instance;

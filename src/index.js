@@ -37,5 +37,6 @@ async function main() {
     await board.loadJsonBoard();
     await board.create2DBoard();
     await board.printBoard();
+    await board.defineStartEndPoint();
     await pawn.init();
 }

@@ -1,23 +1,23 @@
 'use strict';
-
 const fs = require('fs');
-const startPoint = 'S';
-const endPoint = 'E';
-const corridor = ',';
-const wall = '+';
-
 
 const Board = function() {
+    this.startPointChar = 'S';
+    this.endPointChar = 'E';
+    this.startPoint = { x: 0, y: 0 };
+    this.endPoint = { x: 0, y: 0 };
+    this.corridor = ',';
+    this.wall = '+';
     this.data;
     this.lines = [];
     this.labyrinth = [];
 };
 
-Board.prototype.loadJsonBoard = () => {
+Board.prototype.loadJsonBoard = function() {
     return new Promise((resolve, reject) => {
        try {
-           const file = fs.readFileSync('labyrinth.json');
-           this.lines = JSON.parse(file);
+           const file = JSON.parse(fs.readFileSync('labyrinth.json'));
+           this.lines = file;
            resolve();
        } catch (e) {
            throw new Error(e);
@@ -25,11 +25,11 @@ Board.prototype.loadJsonBoard = () => {
     });
 };
 
-Board.prototype.getTcpData = (data) => {
+Board.prototype.getTcpData = function(data) {
     this.data += data;
 };
 
-Board.prototype.formatLines = () => {
+Board.prototype.formatLines = function() {
     return new Promise(async (resolve, reject) => {
         try {
             if (this.data == null || typeof this.data === 'undefined') { reject(new Error('Data from server is empty ?')); return }
@@ -45,7 +45,7 @@ Board.prototype.formatLines = () => {
     });
 };
 
-Board.prototype.create2DBoard = () => {
+Board.prototype.create2DBoard = function() {
     return new Promise(async (resolve, reject) => {
        try {
            const arr2D = [];
@@ -61,7 +61,7 @@ Board.prototype.create2DBoard = () => {
     });
 };
 
-Board.prototype.printBoard = () => {
+Board.prototype.printBoard = function() {
     return new Promise(async (resolve, reject) => {
         try {
             console.table(this.labyrinth);
@@ -72,26 +72,36 @@ Board.prototype.printBoard = () => {
     });
 };
 
-Board.prototype.getStartPoint = () => {
+Board.prototype.defineStartEndPoint= function() {
+  return new Promise(async (resolve, reject) => {
+    try {
+        this.startPoint = await this.getPoint(this.startPointChar);
+        this.endPoint = await this.getPoint(this.endPointChar);
+        resolve();
+    } catch (e) {
+        throw e;
+    }
+  });
+};
+
+Board.prototype.getPoint = function(char) {
     return new Promise((resolve, reject) => {
         try {
             for (let i = 0; i < this.labyrinth.length; i++) {
                 for (let j = 0; j < this.labyrinth[i].length; j++) {
-                    if (this.labyrinth[i][j] === startPoint) {
+                    if (this.labyrinth[i][j] === char) {
                         resolve({ x: j, y: i });
                         break;
                     }
                 }
             }
-            reject('Cant found the start point !');
+            reject('Cant found the point: ' + char);
         } catch (e) {
             throw new Error(e);
         }
     });
 };
 
-const singleton = new Board();
+const instance = new Board();
 
-Object.freeze(singleton);
-
-module.exports = singleton;
+module.exports = instance;
