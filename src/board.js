@@ -13,18 +13,6 @@ const Board = function() {
     this.labyrinth = [];
 };
 
-Board.prototype.loadJsonBoard = function() {
-    return new Promise((resolve, reject) => {
-       try {
-           const file = JSON.parse(fs.readFileSync('labyrinth.json'));
-           this.lines = file;
-           resolve();
-       } catch (e) {
-           throw new Error(e);
-       }
-    });
-};
-
 Board.prototype.getTcpData = function(data) {
     this.data += data;
 };
@@ -38,6 +26,18 @@ Board.prototype.formatLines = function() {
             arr.shift();arr.shift();
             this.lines = arr;
             await fs.writeFileSync('labyrinth.json', JSON.stringify(arr), { encoding: 'utf-8' });
+            resolve();
+        } catch (e) {
+            throw new Error(e);
+        }
+    });
+};
+
+Board.prototype.loadJsonBoard = function() {
+    return new Promise((resolve, reject) => {
+        try {
+            const file = JSON.parse(fs.readFileSync('labyrinth.json'));
+            this.lines = file;
             resolve();
         } catch (e) {
             throw new Error(e);

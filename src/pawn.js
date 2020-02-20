@@ -15,7 +15,7 @@ Pawn.prototype.init = function() {
         try {
             this.pos = board.startPoint;
             console.log(this.pos);
-            this.direction = await this.scanStartDirection();
+            this.direction = Direction.RIGHT;
             console.log(this.direction);
             resolve();
         } catch (e) {
@@ -24,7 +24,11 @@ Pawn.prototype.init = function() {
     });
 };
 
-Pawn.prototype.scanStartDirection = function() {
+Pawn.prototype.walk = function() {
+
+};
+
+Pawn.prototype.scanCurrentPos = function() {
     return new Promise((resolve, reject) => {
         try {
             resolve(Direction.RIGHT);
