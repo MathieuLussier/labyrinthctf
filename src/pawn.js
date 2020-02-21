@@ -43,8 +43,8 @@ Pawn.prototype.walk = function() {
             } else {
                 this.pos = this.backtrack[this.backtrack.length - 1].pos;
                 this.direction = this.backtrack[this.backtrack.length - 1].direction;
+                await this.removeJunkPath(this.backtrack[this.backtrack.length - 1]);
                 this.backtrack.pop();
-                await this.removeJunkPath();
                 await this.move();
             }
 
@@ -53,15 +53,38 @@ Pawn.prototype.walk = function() {
                 this.isFinish = true;
                 console.log('End point reach !');
                 console.log(await this.getPosPlusDir(this.pos, this.direction));
+                console.table(this.path);
+                // let x = board.startPoint.x;
+                // let y = board.startPoint.y;
+                // for (let i = 0; i < this.path.length; i++) {
+                //     console.log(this.path[i]);
+                //     console.log(x + ' ' + y);
+                //     // board[y][x] = '#';
+                //     switch(this.path[i]) {
+                //         case 'UP':
+                //             y--;
+                //             break;
+                //         case 'DOWN':
+                //             y++;
+                //             break;
+                //         case 'RIGHT':
+                //             x++;
+                //             break;
+                //         case 'LEFT':
+                //             x--;
+                //             break;
+                //     }
+                // }
                 console.log(this.path.length);
                 await this.pathToString();
                 // console.log(this.path);
                 await fs.writeFileSync('path.json', JSON.stringify(this.path, null, 4), { encoding: 'utf-8' });
+                board.printBoard();
                 console.timeEnd('RunTime');
             }
 
             // console.dir(this.backtrack);
-            board.printBoard();
+            // board.printBoard();
             // this.printPosDirection();
             resolve(!this.isFinish);
         } catch (e) {
@@ -70,10 +93,10 @@ Pawn.prototype.walk = function() {
     });
 };
 
-Pawn.prototype.removeJunkPath = function() {
+Pawn.prototype.removeJunkPath = function(backtrack) {
     return new Promise(async (resolve, reject) => {
         try {
-            while(this.count > 0) {
+            while(this.count > backtrack.count) {
                 this.path.pop();
                 this.count--;
             }
@@ -136,12 +159,10 @@ Pawn.prototype.scanCurrentPos = function() {
             // console.log('leftPos' + left.pos.x + left.pos.y);
             // console.log('rightPos' + right.pos.x + right.pos.y);
             if (board.labyrinth[left.pos.y][left.pos.x] === ' ') {
-                this.backtrack.push({pos: this.pos, direction: left.direction});
-                this.count = 0;
+                this.backtrack.push({pos: this.pos, direction: left.direction, count: this.count});
             }
             if (board.labyrinth[right.pos.y][right.pos.x] === ' ') {
-                this.backtrack.push({pos: this.pos, direction: right.direction});
-                this.count = 0;
+                this.backtrack.push({pos: this.pos, direction: right.direction, count: this.count});
             }
             resolve();
         } catch (e) {
