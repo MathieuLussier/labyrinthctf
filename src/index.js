@@ -10,18 +10,22 @@ const pawn = require('./pawn');
 if (LOAD_ONLINE) {
     const client = net.createConnection({ port: 17017, host: 'csi.cstjean.qc.ca' });
 
-    client.on('connect', async function() {
+    client.on('connect', function() {
         console.log('Connected');
-        await main();
-        const pathing = await JSON.parse(fs.readFileSync(path.join(__dirname, '/path.json')));
-        console.log('Writing to server');
-        console.table(pathing);
-        await client.write(pathing);
     });
 
     client.on('data', function(data) {
         board.getTcpData(data.toString());
     });
+
+    setTimeout(async () => {
+        await main(async () => {
+            const pathing = await JSON.parse(fs.readFileSync(path.join(__dirname, '/path.json')));
+            console.log('Writing to server');
+            console.table(pathing);
+            await client.write(pathing);
+        });
+    }, 1700);
 
     setTimeout(() => {
         client.destroy();
@@ -38,31 +42,27 @@ if (LOAD_ONLINE) {
     });
 }
 
-async function main() {
-    return new Promise(async (resolve, reject) => {
-       try {
-           console.time('RunTime');
-           if (LOAD_ONLINE) {
-               await board.formatLines();
-           }
-           await board.loadJsonBoard();
-           await board.create2DBoard();
-           await board.printBoard();
-           await board.defineStartEndPoint();
-           await pawn.init();
-           let loop = true;
-           while (loop) {
-               loop = await pawn.walk();
-           }
-           resolve();
-       } catch(e) {
-           throw e;
+async function main(callback) {
+       console.time('RunTime');
+       if (LOAD_ONLINE) {
+           await board.formatLines();
        }
-    });
+       await board.loadJsonBoard();
+       await board.create2DBoard();
+       await board.printBoard();
+       await board.defineStartEndPoint();
+       await pawn.init();
+       let loop = true;
+       while (loop) {
+           loop = await pawn.walk();
+       }
+       callback();
 }
 
 if (!LOAD_ONLINE) {
-    main();
+    main(() => {
+        console.log('finished');
+    });
 }
 
 module.exports.main = main;
