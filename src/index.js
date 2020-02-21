@@ -1,13 +1,15 @@
 'use strict';
 
-const LOAD_ONLINE = false;
+const LOAD_ONLINE = true;
 const net = require('net');
 const board = require('./board');
 const pawn = require('./pawn');
 
 if (LOAD_ONLINE) {
-    const client = net.createConnection({port: 17017, host: 'csi.cstjean.qc.ca'}, function() {
-        console.log('Connected');
+    const client = net.createConnection({ port: 17017, host: '52.235.37.30' });
+
+    client.on('connect', function() {
+        console.log('Connected')
     });
 
     client.on('data', function(data) {
@@ -39,8 +41,9 @@ async function main() {
     await board.printBoard();
     await board.defineStartEndPoint();
     await pawn.init();
-    for (;;) {
-        await pawn.walk();
+    let loop = true;
+    while (loop) {
+        loop = await pawn.walk();
     }
 }
 

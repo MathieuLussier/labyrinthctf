@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const board = require('./board');
 const Direction = require('./direction');
 
@@ -8,6 +9,7 @@ const Pawn = function() {
     this.path = [];
     this.backtrack = [];
     this.direction = { x: 1, y: 0 };
+    this.count = 0;
     this.isFinish = false;
 };
 
@@ -42,25 +44,42 @@ Pawn.prototype.walk = function() {
                 this.pos = this.backtrack[this.backtrack.length - 1].pos;
                 this.direction = this.backtrack[this.backtrack.length - 1].direction;
                 this.backtrack.pop();
+                await this.removeJunkPath();
                 await this.move();
             }
 
             const win = await this.checkWin();
             if (win) {
+                this.isFinish = true;
                 console.log('End point reach !');
                 console.log(await this.getPosPlusDir(this.pos, this.direction));
+                console.log(this.path.length);
                 await this.pathToString();
-                console.log(this.path);
+                // console.log(this.path);
+                await fs.writeFileSync('path.json', JSON.stringify(this.path, null, 4), { encoding: 'utf-8' });
                 console.timeEnd('RunTime');
-                process.exit(0);
             }
 
             // console.dir(this.backtrack);
-            // board.printBoard();
+            board.printBoard();
             // this.printPosDirection();
-            resolve();
+            resolve(!this.isFinish);
         } catch (e) {
             throw new Error(e);
+        }
+    });
+};
+
+Pawn.prototype.removeJunkPath = function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            while(this.count > 0) {
+                this.path.pop();
+                this.count--;
+            }
+            resolve();
+        } catch (e) {
+            throw e;
         }
     });
 };
@@ -71,6 +90,7 @@ Pawn.prototype.move = function() {
             this.pos = await this.getPosPlusDir(this.pos, this.direction);
             await this.setPawnPosOnBoard();
             this.path.push(await Direction.formatString(this.direction));
+            this.count++;
             resolve();
         } catch (e) {
             throw e;
@@ -117,9 +137,11 @@ Pawn.prototype.scanCurrentPos = function() {
             // console.log('rightPos' + right.pos.x + right.pos.y);
             if (board.labyrinth[left.pos.y][left.pos.x] === ' ') {
                 this.backtrack.push({pos: this.pos, direction: left.direction});
+                this.count = 0;
             }
             if (board.labyrinth[right.pos.y][right.pos.x] === ' ') {
                 this.backtrack.push({pos: this.pos, direction: right.direction});
+                this.count = 0;
             }
             resolve();
         } catch (e) {

@@ -26,7 +26,7 @@ Board.prototype.formatLines = function() {
             arr = arr.filter((a) => {return a!=='' });
             arr.shift();arr.shift();
             this.lines = arr;
-            await fs.writeFileSync('labyrinth.json', JSON.stringify(arr), { encoding: 'utf-8' });
+            await fs.writeFileSync('labyrinth.json', JSON.stringify(arr, null, 4), { encoding: 'utf-8' });
             resolve();
         } catch (e) {
             throw new Error(e);
