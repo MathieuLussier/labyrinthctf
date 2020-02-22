@@ -7,29 +7,19 @@ const path = require('path');
 const board = require('./board');
 const pawn = require('./pawn');
 
+let client;
 if (LOAD_ONLINE) {
-    const client = net.createConnection({ port: 17017, host: 'csi.cstjean.qc.ca' });
+    client = net.createConnection({ port: 17017, host: 'csi.cstjean.qc.ca' });
 
     client.on('connect', function() {
         console.log('Connected');
+        startTimeout();
     });
 
     client.on('data', function(data) {
+        console.log(data.toString());
         board.getTcpData(data.toString());
     });
-
-    setTimeout(async () => {
-        await main(async () => {
-            const pathing = await JSON.parse(fs.readFileSync(path.join(__dirname, '/path.json')));
-            console.log('Writing to server');
-            console.table(pathing);
-            await client.write(pathing);
-        });
-    }, 1700);
-
-    setTimeout(() => {
-        client.destroy();
-    }, 10000);
 
     client.on('error', function(err) { throw err });
 
@@ -40,6 +30,21 @@ if (LOAD_ONLINE) {
     client.on('end', function() {
         console.log('disconnected from server');
     });
+}
+
+function startTimeout() {
+    setTimeout(async () => {
+        await main(async () => {
+            const pathing = await JSON.parse(fs.readFileSync(path.join(__dirname, '/path.json')));
+            console.log('Writing to server');
+            console.log(pathing);
+            client.write(Buffer.from(pathing));
+        });
+    }, 1500);
+
+    // setTimeout(() => {
+    //     client.destroy();
+    // }, 60000);
 }
 
 async function main(callback) {
