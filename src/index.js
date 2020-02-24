@@ -35,16 +35,17 @@ if (LOAD_ONLINE) {
 function startTimeout() {
     setTimeout(async () => {
         await main(async () => {
-            const pathing = await JSON.parse(fs.readFileSync(path.join(__dirname, '/path.json')));
             console.log('Writing to server');
-            console.log(pathing);
-            client.write(Buffer.from(pathing));
+            pawn.path += ',RIGHT';
+            console.log(pawn.path);
+            client.write(pawn.path);
+            client.end();
         });
-    }, 1500);
+    }, 1000);
 
-    // setTimeout(() => {
-    //     client.destroy();
-    // }, 60000);
+    setTimeout(() => {
+        client.destroy();
+    }, 60000);
 }
 
 async function main(callback) {

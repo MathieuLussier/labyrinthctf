@@ -4,12 +4,15 @@ const board = require('./board');
 const Direction = require('./direction');
 
 const Pawn = function() {
-    this.pawnChar = 'P';
+    this.pawnChar = '\u1F68';
     this.pos = { x: 0, y: 0 };
     this.path = [];
     this.backtrack = [];
     this.direction = { x: 1, y: 0 };
-    this.count = 0;
+    this.history = {
+            count: 0,
+            pos: []
+        };
     this.isFinish = false;
 };
 
@@ -96,9 +99,11 @@ Pawn.prototype.walk = function() {
 Pawn.prototype.removeJunkPath = function(backtrack) {
     return new Promise(async (resolve, reject) => {
         try {
-            while(this.count > backtrack.count) {
+            while(this.history.count > backtrack.count) {
                 this.path.pop();
-                this.count--;
+                await this.removePawnPosOnBoard(this.history.pos[this.history.pos.length - 1]);
+                this.history.pos.pop();
+                this.history.count--;
             }
             resolve();
         } catch (e) {
@@ -113,7 +118,9 @@ Pawn.prototype.move = function() {
             this.pos = await this.getPosPlusDir(this.pos, this.direction);
             await this.setPawnPosOnBoard();
             this.path.push(await Direction.formatString(this.direction));
-            this.count++;
+            const historyPos = { x: this.pos.x, y: this.pos.y };
+            this.history.pos.push(historyPos);
+            this.history.count++;
             resolve();
         } catch (e) {
             throw e;
@@ -159,10 +166,10 @@ Pawn.prototype.scanCurrentPos = function() {
             // console.log('leftPos' + left.pos.x + left.pos.y);
             // console.log('rightPos' + right.pos.x + right.pos.y);
             if (board.labyrinth[left.pos.y][left.pos.x] === ' ') {
-                this.backtrack.push({pos: this.pos, direction: left.direction, count: this.count});
+                this.backtrack.push({pos: this.pos, direction: left.direction, count: this.history.count});
             }
             if (board.labyrinth[right.pos.y][right.pos.x] === ' ') {
-                this.backtrack.push({pos: this.pos, direction: right.direction, count: this.count});
+                this.backtrack.push({pos: this.pos, direction: right.direction, count: this.history.count});
             }
             resolve();
         } catch (e) {
@@ -200,6 +207,17 @@ Pawn.prototype.setPawnPosOnBoard = function() {
     return new Promise((resolve, reject) => {
         try {
             board.labyrinth[this.pos.y][this.pos.x] = this.pawnChar;
+            resolve();
+        } catch (e) {
+            throw e;
+        }
+    });
+};
+
+Pawn.prototype.removePawnPosOnBoard = function(pos) {
+    return new Promise((resolve, reject) => {
+        try {
+            board.labyrinth[pos.y][pos.x] = ' ';
             resolve();
         } catch (e) {
             throw e;
